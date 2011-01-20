@@ -410,6 +410,16 @@ class RDialog
     call_and_capture command
   end
 
+
+  # A pause box displays a meter along the bottom of the box. The meter
+  # indicates how many seconds remain until the end of the pause. The
+  # pause exits when timeout is reached or the user presses the OK button
+  # (status OK) or the user presses the CANCEL button or Esc key.
+  def pause(text='Wait or press OK', height=0, width=0, seconds=0)
+    command = %(--pause "#{text.to_s}" #{height.to_i} #{width.to_i} #{seconds.to_i})
+    call_and_capture command
+  end
+
   private
 
   def call_and_capture(command)
