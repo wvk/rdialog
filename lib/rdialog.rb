@@ -420,6 +420,32 @@ class RDialog
     call_and_capture command
   end
 
+  # A progressbox is similar to an tailbox, except that it will exit
+  # when it reaches the end of the file. If three parameters are given,
+  # it displays the text under the title, delineated from the scrolling
+  # file's contents. If only two parameters are given, this text is omitted.
+  #
+  # If called with a block, an IO object will be passed to that block where
+  # you can write progress information like on any other IO object.
+  # If called without block, an IO object will be returned and it's your
+  # responsibility to close it!
+  # Example:
+  #   progress = RDialog.new.progressbox 'See some text five times:'
+  #     5.times do
+  #       progress.puts 'some text'
+  #       sleep 1
+  #     end
+  #   end
+  def progressbox(text=nil, height=0, width=0, &block)
+    command = %(--progressbox "#{text.to_s}" #{height.to_i} #{width.to_i})
+    syscommand = %(#{option_string} --stdout #{command})
+    if block_given?
+      IO.popen(syscommand, 'w', &block)
+    else
+      IO.popen(syscommand, 'w')
+    end
+  end
+
   private
 
   def call_and_capture(command)
