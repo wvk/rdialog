@@ -291,7 +291,7 @@ class RDialog
   # between windows.
   #
   # On  exit, a Time object is returned.
-  def timebox(text='text'<, height=0, width=0, time=Time.now)
+  def timebox(text='text', height=0, width=0, time=Time.now)
     command = %(--timebox "#{text}" #{height.to_i} #{width.to_i} #{time.hour} #{time.min} #{time.sec})
     call_and_capture command do |value|
       Time.parse value
@@ -325,6 +325,66 @@ class RDialog
   # switch between by pressing the TAB key.
   def yesno(text='Please enter some text', height=0, width=0)
     command = %(--yesno "#{text}" #{height.to_i} #{width.to_i})
+    call_and_capture command
+  end
+
+  # The edit-box dialog displays a copy of the file. You may edit it using the
+  # backspace, delete and cursor keys to correct typing errors. It also recognizes
+  # pageup/pagedown. Unlike the --inputbox, you must tab to the "OK" or "Cancel"
+  # buttons to close the dialog. Pressing the "Enter" key within the box will split
+  # the corresponding line.
+  # On exit, the contents of the edit window are written to dialog's output.
+  def editbox(filepath, height=0, width=0)
+    command = %(--editbox "#{filepath.to_s}" #{height.to_i} #{width.to_i})
+    call_and_capture command
+  end
+
+  # The form dialog displays a form consisting of labels and fields, which are
+  # positioned on a scrollable window by coordinates given in the script. The field
+  # length flen and input-length ilen tell how long the field can be. The former
+  # defines the length shown for a selected field, while the latter defines the
+  # permissible length of the data entered in the field.
+  #
+  # - If flen is zero, the corresponding field cannot be altered. and the contents of
+  #   the field determine the displayed-length.
+  # - If flen is negative, the corresponding field cannot be altered, and the negated
+  #   value of flen is used as the displayed-length.
+  # - If ilen is zero, it is set to flen.
+  #
+  # Use up/down arrows (or control/N, control/P) to move between fields. Use tab to
+  # move between windows.
+  # On exit, the contents of the form-fields are written to dialog's output, each
+  # field separated by a newline. The text used to fill non-editable fields (flen is
+  # zero or negative) is not written out.
+  def form(text='some text', height=0, width=0, formheight=0, items=[])
+    # item = [label, y, x, item, y, x, flen, ilen]
+    item_string = items.collect{|i| %("#{i[0]}" #{i[1]} #{i[2]} "#{i[3]}" #{i[4]} #{i[5]} #{i[6]} #{i[7]})}.join(' ')
+    puts item_string
+    command = %(--form "#{text.to_s}" #{height.to_i} #{width.to_i} #{formheight.to_i} #{item_string})
+    call_and_capture command do |return_value|
+      fields = []
+      return_value.each_line do |line|
+        puts line
+      end
+    end
+  end
+
+  # The directory-selection dialog displays a text-entry window in which
+  # you can type a directory, and above that a windows with directory names.
+  # Here filepath can be a filepath in which case the directory window
+  # will display the contents of the path and the text-entry window will
+  # contain the preselected directory.
+  # Use tab or arrow keys to move between the windows. Within the directory
+  # window, use the up/down arrow keys to scroll the current selection.
+  # Use the space-bar to copy the current selection into the text-entry window.
+  # Typing any printable characters switches focus to the text-entry window,
+  # entering that character as well as scrolling the directory window to
+  # the closest match.
+  # Use a carriage return or the "OK" button to accept the current value in
+  # the text-entry window and exit.
+  # On exit, the contents of the text-entry window are written to dialog's output.
+  def dselect(filepath, height=0, width=0)
+    command = %(--dselect "#{filepath.to_s}" #{height.to_i} #{width.to_i})
     call_and_capture command
   end
 
