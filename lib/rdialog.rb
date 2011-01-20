@@ -369,6 +369,28 @@ class RDialog
     end
   end
 
+  # simpler API to Forms:
+  # Example: dialog.simple_form('Edit your values', {'Name:' => '', 'Postal Code:' => '12345'}, :label_width => 15)
+  # Possible options:
+  #  * :label_width => common width setting for all labels
+  #  * :field_width => common width setting for all input fields
+  #  * :max_length  => common maximum field length setting for all input fields
+  #  * :form_height => see form_height argument for form method
+  #  * :height      => see height argument for form method
+  #  * :width       => see width argument for form method
+  def simple_form(text='some text', items={}, options={})
+    label_width = options[:label_width] || items.keys.map(&:length).max + 1
+    field_width = options[:field_width] || items.values.map(&:length).max + 1
+    max_length  = options[:max_length]  || 0
+    raw_items   = []
+    i = 1
+    items.each_pair do |k, v|
+      raw_items << [k, i, 1, v, i, label_width, field_width, max_length]
+      i += 1
+    end
+    form text, options[:width]||0, options[:height]||0, options[:form_height]||0, raw_items
+  end
+
   # The directory-selection dialog displays a text-entry window in which
   # you can type a directory, and above that a windows with directory names.
   # Here filepath can be a filepath in which case the directory window
