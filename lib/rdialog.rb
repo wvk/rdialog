@@ -165,9 +165,42 @@ class RDialog
     call_and_capture command
   end
 
-  # Does not work. Someone is welcome to try and make it work.
-  def gauge(text, height=0, width=0)
-    return false
+  # A gauge box displays a meter along the bottom of the box. The
+  # meter indicates the percentage. New percentages are read from
+  # standard input, one integer per line. The meter is updated to
+  # reflect each new percentage. If the standard input reads the
+  # string "XXX", then the first line following is taken as an
+  # integer percentage, then subsequent lines up to another "XXX"
+  # are used for a new prompt. The gauge exits when EOF is reached
+  # on the standard input.
+  # The percent value denotes the initial percentage shown in the
+  # meter. If not specified, it is zero.
+  # On exit, no text is written to dialog's output. The widget
+  # accepts no input, so the exit status is always OK.
+  #
+  # If called with a block, an IO object will be passed to that block where
+  # you can write progress information like on any other IO object.
+  # If called without block, an IO object will be returned and it's your
+  # responsibility to close it!
+  #
+  # Example:
+  #
+  #   RDialog.new.gauge 'test text', 0, 100 do |progress|
+  #     100.times do |i|
+  #       progress.puts 'XXX'
+  #       progress.puts i
+  #       progress.puts "Progress: #{i}"
+  #       sleep 0.1
+  #     end
+  #   end
+
+  def gauge(text, height=0, width=0, percent=nil, &block)
+    command = %(#{option_string} --stdout --gauge "#{text.to_s}" #{height.to_i} #{width.to_i} #{percent})
+    if block_given?
+      IO.popen(command, 'w', &block)
+    else
+      IO.popen(command, 'w')
+    end
   end
 
   # An info box is basically a message box.  However, in this case,
@@ -369,8 +402,7 @@ class RDialog
     end
   end
 
-  # simpler API to Forms:
-  # Example: dialog.simple_form('Edit your values', {'Name:' => '', 'Postal Code:' => '12345'}, :label_width => 15)
+  # Simpler API to create a form
   # Possible options:
   #  * :label_width => common width setting for all labels
   #  * :field_width => common width setting for all input fields
@@ -378,6 +410,10 @@ class RDialog
   #  * :form_height => see form_height argument for form method
   #  * :height      => see height argument for form method
   #  * :width       => see width argument for form method
+  #
+  # Example:
+  #   RDialog.new.simple_form('Edit your values', {'Name:' => '', 'Postal Code:' => '12345'}, :label_width => 15)
+  #
   def simple_form(text='some text', items={}, options={})
     label_width = options[:label_width] || items.keys.map(&:length).max + 1
     field_width = options[:field_width] || items.values.map(&:length).max + 1
@@ -429,7 +465,9 @@ class RDialog
   # you can write progress information like on any other IO object.
   # If called without block, an IO object will be returned and it's your
   # responsibility to close it!
+  #
   # Example:
+  #
   #   progress = RDialog.new.progressbox 'See some text five times:'
   #     5.times do
   #       progress.puts 'some text'
@@ -437,12 +475,11 @@ class RDialog
   #     end
   #   end
   def progressbox(text=nil, height=0, width=0, &block)
-    command = %(--progressbox "#{text.to_s}" #{height.to_i} #{width.to_i})
-    syscommand = %(#{option_string} --stdout #{command})
+    command = %(#{option_string} --stdout --progressbox "#{text.to_s}" #{height.to_i} #{width.to_i})
     if block_given?
-      IO.popen(syscommand, 'w', &block)
+      IO.popen(command, 'w', &block)
     else
-      IO.popen(syscommand, 'w')
+      IO.popen(command, 'w')
     end
   end
 
